@@ -4,6 +4,7 @@ body {
   align-items: center;
   height: 100vh;
   margin: 0;
+  margin-top: 25px;
   background: linear-gradient(135deg, #1e293b, #0f172a);
   color: #f1f5f9;
   font-family: 'Arial', sans-serif;
