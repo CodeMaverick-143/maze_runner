@@ -1,205 +1,287 @@
-const player = document.getElementById('player');
-const maze = document.getElementById('maze');
-const end = document.getElementById('end');
-const timerElement = document.getElementById('timer');
-const movesElement = document.getElementById('moves');
-const levelElement = document.getElementById('level');
-const resetBtn = document.getElementById('resetBtn');
-const newGameBtn = document.getElementById('newGameBtn');
+let mazeContainer = document.getElementById("maze-container");
+let sizeInput = document.getElementById("size");
+let generateButton = document.getElementById("generate");
+let solveButton = document.getElementById("solve");
 
-// Player position and move distance
-let playerX = 10;
-let playerY = 10;
-const moveDistance = 20;
+let size = parseInt(sizeInput.value);
+let maze = generateMaze(size);
+let playerPosition = { x: 0, y: 0 };
+let previousPosition = { x: 0, y: 0 };
+let visited = {};
+let previousPositions = [];
+let PlayerCanMove = true;
 
-// Game state
-let timer = 0;
-let moves = 0;
-let level = 1;
-let timerInterval = null;
+renderMaze(maze);
 
-// Predefined grid-based maze layouts for each level
-const levels = [
-    // Level 1: Simple grid maze
-    [
-        { top: 0, left: 40, width: 20, height: 200 },
-        { top: 0, left: 120, width: 20, height: 400 },
-        { top: 80, left: 40, width: 200, height: 20 },
-        { top: 160, left: 200, width: 200, height: 20 },
-        { top: 240, left: 40, width: 20, height: 120 },
-        { top: 320, left: 120, width: 20, height: 200 },
-        { top: 400, left: 40, width: 200, height: 20 },
-    ],
-    // Level 2: More complex maze
-    [
-        { top: 0, left: 60, width: 20, height: 300 },
-        { top: 0, left: 200, width: 20, height: 400 },
-        { top: 80, left: 80, width: 200, height: 20 },
-        { top: 160, left: 40, width: 300, height: 20 },
-        { top: 240, left: 60, width: 20, height: 120 },
-        { top: 320, left: 120, width: 300, height: 20 },
-        { top: 400, left: 60, width: 200, height: 20 },
-        { top: 240, left: 240, width: 20, height: 120 },
-    ],
-    // Level 3: Advanced maze
-    [
-        { top: 0, left: 40, width: 20, height: 400 },
-        { top: 0, left: 200, width: 20, height: 200 },
-        { top: 80, left: 80, width: 200, height: 20 },
-        { top: 160, left: 40, width: 300, height: 20 },
-        { top: 240, left: 40, width: 20, height: 120 },
-        { top: 320, left: 120, width: 20, height: 120 },
-        { top: 400, left: 40, width: 300, height: 20 },
-        { top: 240, left: 240, width: 20, height: 120 },
-    ],
-];
+generateButton.addEventListener("click", () => {
+  size = parseInt(sizeInput.value);
+  maze = generateMaze(size);
+  playerPosition = { x: 0, y: 0 };
+  visited = {};
+  PlayerCanMove = true;
 
-// Generate walls for the current level
-function generateWalls(level) {
-    maze.querySelectorAll('.wall').forEach((wall) => wall.remove());
-    levels[level - 1].forEach((wallConfig) => {
-        const wall = document.createElement('div');
-        wall.className = 'wall bg-gray-700 absolute';
-        Object.assign(wall.style, {
-            top: `${wallConfig.top}px`,
-            left: `${wallConfig.left}px`,
-            width: `${wallConfig.width}px`,
-            height: `${wallConfig.height}px`,
-        });
-        maze.appendChild(wall);
-    });
-
-    // Position the end point dynamically
-    end.style.top = `${maze.offsetHeight - 40}px`;
-    end.style.left = `${maze.offsetWidth - 40}px`;
-    end.style.width = '20px';
-    end.style.height = '20px';
-}
-
-// Start timer
-function startTimer() {
-    timerInterval = setInterval(() => {
-        timer++;
-        timerElement.textContent = timer;
-    }, 1000);
-}
-
-// Stop timer
-function stopTimer() {
-    clearInterval(timerInterval);
-}
-
-// Reset game
-function resetGame() {
-    playerX = 10;
-    playerY = 10;
-    moves = 0;
-    timer = 0;
-    player.style.left = `${playerX}px`;
-    player.style.top = `${playerY}px`;
-    timerElement.textContent = timer;
-    movesElement.textContent = moves;
-    stopTimer();
-    startTimer();
-}
-
-// New game
-function newGame() {
-    level = (level % levels.length) + 1;
-    levelElement.textContent = level;
-    generateWalls(level);
-    resetGame();
-}
-
-// Collision detection
-function checkCollision(newX, newY) {
-    const playerRect = {
-        left: newX,
-        top: newY,
-        right: newX + player.offsetWidth,
-        bottom: newY + player.offsetHeight,
-    };
-
-    const walls = maze.querySelectorAll('.wall');
-    for (const wall of walls) {
-        const wallRect = wall.getBoundingClientRect();
-        const mazeRect = maze.getBoundingClientRect();
-        const wallAdjusted = {
-            left: wallRect.left - mazeRect.left,
-            top: wallRect.top - mazeRect.top,
-            right: wallRect.left - mazeRect.left + wall.offsetWidth,
-            bottom: wallRect.top - mazeRect.top + wall.offsetHeight,
-        };
-
-        if (
-            playerRect.right > wallAdjusted.left &&
-            playerRect.left < wallAdjusted.right &&
-            playerRect.bottom > wallAdjusted.top &&
-            playerRect.top < wallAdjusted.bottom
-        ) {
-            return true;
-        }
-    }
-    return false;
-}
-
-// Handle player movement
-document.addEventListener('keydown', (e) => {
-    let newX = playerX;
-    let newY = playerY;
-
-    switch (e.key) {
-        case 'ArrowUp':
-            newY -= moveDistance;
-            break;
-        case 'ArrowDown':
-            newY += moveDistance;
-            break;
-        case 'ArrowLeft':
-            newX -= moveDistance;
-            break;
-        case 'ArrowRight':
-            newX += moveDistance;
-            break;
-    }
-
-    if (
-        newX >= 0 &&
-        newX <= maze.offsetWidth - player.offsetWidth &&
-        newY >= 0 &&
-        newY <= maze.offsetHeight - player.offsetHeight &&
-        !checkCollision(newX, newY)
-    ) {
-        playerX = newX;
-        playerY = newY;
-        player.style.left = `${playerX}px`;
-        player.style.top = `${playerY}px`;
-        moves++;
-        movesElement.textContent = moves;
-    }
-
-    // Check win condition
-    const endRect = end.getBoundingClientRect();
-    const playerRect = player.getBoundingClientRect();
-
-    if (
-        playerRect.left >= endRect.left &&
-        playerRect.top >= endRect.top &&
-        playerRect.right <= endRect.right &&
-        playerRect.bottom <= endRect.bottom
-    ) {
-        stopTimer();
-        setTimeout(() => {
-            alert(`🎉 You Win! Time: ${timer}s, Moves: ${moves}`);
-            newGame();
-        }, 100);
-    }
+  renderMaze(maze);
 });
 
-// Event listeners
-resetBtn.addEventListener('click', resetGame);
-newGameBtn.addEventListener('click', newGame);
+solveButton.addEventListener("click", () => {
+  PlayerCanMove = false;
+  const solution = solveMaze(maze, size);
+  animateSolution(solution);
+});
 
-// Initialize game
-generateWalls(level);
-resetGame();
+document.addEventListener("keydown", movePlayer);
+
+function generateMaze(size) {
+  const maze = Array.from({ length: size }, () => Array(size).fill(15));
+  const visited = Array.from({ length: size }, () => Array(size).fill(false));
+  const walls = [];
+
+  function addWalls(x, y) {
+    if (x > 0 && !visited[y][x - 1]) walls.push({ x, y, direction: "left" });
+    if (x < size - 1 && !visited[y][x + 1])
+      walls.push({ x, y, direction: "right" });
+    if (y > 0 && !visited[y - 1][x]) walls.push({ x, y, direction: "up" });
+    if (y < size - 1 && !visited[y + 1][x])
+      walls.push({ x, y, direction: "down" });
+  }
+
+  let x = Math.floor(Math.random() * size);
+  let y = Math.floor(Math.random() * size);
+  visited[y][x] = true;
+  addWalls(x, y);
+
+  while (walls.length > 0) {
+    const { x, y, direction } = walls.splice(
+      Math.floor(Math.random() * walls.length),
+      1
+    )[0];
+
+    let nx = x,
+      ny = y;
+    if (direction === "left") nx--;
+    if (direction === "right") nx++;
+    if (direction === "up") ny--;
+    if (direction === "down") ny++;
+
+    if (nx >= 0 && ny >= 0 && nx < size && ny < size && !visited[ny][nx]) {
+      visited[ny][nx] = true;
+
+      if (direction === "left") {
+        maze[y][x] &= ~1;
+        maze[ny][nx] &= ~4;
+      } else if (direction === "right") {
+        maze[y][x] &= ~4;
+        maze[ny][nx] &= ~1;
+      } else if (direction === "up") {
+        maze[y][x] &= ~2;
+        maze[ny][nx] &= ~8;
+      } else if (direction === "down") {
+        maze[y][x] &= ~8;
+        maze[ny][nx] &= ~2;
+      }
+
+      addWalls(nx, ny);
+    }
+  }
+
+  return maze;
+}
+
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+function renderMaze(maze, solution = []) {
+  mazeContainer.style.gridTemplateColumns = `repeat(${size}, var(--cell-size))`;
+  mazeContainer.style.gridTemplateRows = `repeat(${size}, var(--cell-size))`;
+  mazeContainer.innerHTML = "";
+
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.dataset.x = x;
+      cell.dataset.y = y;
+      if (x === 0 && y === 0) cell.classList.add("start");
+      if (x === size - 1 && y === size - 1) cell.classList.add("end");
+      if (solution.some((pos) => pos.x === x && pos.y === y)) {
+        cell.classList.add("solution");
+      }
+
+      addWalls(cell, maze[y][x]);
+      mazeContainer.appendChild(cell);
+    }
+  }
+
+  const playerCell = document.querySelector(
+    `.cell[data-x="${playerPosition.x}"][data-y="${playerPosition.y}"]`
+  );
+  playerCell.classList.add("player");
+}
+
+function addWalls(cell, value) {
+  if (value & 1) cell.classList.add("left");
+  if (value & 2) cell.classList.add("top");
+  if (value & 4) cell.classList.add("right");
+  if (value & 8) cell.classList.add("bottom");
+}
+
+function solveMaze(maze, size) {
+  const directions = [
+    { x: 1, y: 0 },
+    { x: -1, y: 0 },
+    { x: 0, y: 1 },
+    { x: 0, y: -1 }
+  ];
+  const start = { x: 0, y: 0 };
+  const end = { x: size - 1, y: size - 1 };
+  const queue = [[start]];
+  const visited = Array.from({ length: size }, () => Array(size).fill(false));
+  visited[0][0] = true;
+
+  while (queue.length) {
+    const path = queue.shift();
+    const { x, y } = path[path.length - 1];
+
+    if (x === end.x && y === end.y) {
+      return path;
+    }
+
+    for (const { x: dx, y: dy } of directions) {
+      const nx = x + dx;
+      const ny = y + dy;
+
+      if (
+        nx >= 0 &&
+        ny >= 0 &&
+        nx < size &&
+        ny < size &&
+        !visited[ny][nx] &&
+        canMove(maze[y][x], dx, dy)
+      ) {
+        visited[ny][nx] = true;
+        queue.push([...path, { x: nx, y: ny }]);
+      }
+    }
+  }
+  return [];
+}
+
+function canMove(cellValue, dx, dy) {
+  if (dx === 1 && !(cellValue & 4)) return true;
+  if (dx === -1 && !(cellValue & 1)) return true;
+  if (dy === 1 && !(cellValue & 8)) return true;
+  if (dy === -1 && !(cellValue & 2)) return true;
+  return false;
+}
+
+function animateSolution(solution) {
+  let index = 0;
+
+  const interval = setInterval(() => {
+    if (index >= solution.length) {
+      clearInterval(interval);
+      return;
+    }
+
+    const { x, y } = solution[index];
+    const cell = document.querySelector(`.cell[data-x="${x}"][data-y="${y}"]`);
+    cell.classList.add("solution");
+    index++;
+  }, 100);
+}
+
+function movePlayer(event) {
+  const directionMap = {
+    ArrowUp: { dx: 0, dy: -1 },
+    ArrowDown: { dx: 0, dy: 1 },
+    ArrowLeft: { dx: -1, dy: 0 },
+    ArrowRight: { dx: 1, dy: 0 }
+  };
+
+  if (PlayerCanMove) {
+    if (directionMap[event.key]) {
+      const { dx, dy } = directionMap[event.key];
+      const newX = playerPosition.x + dx;
+      const newY = playerPosition.y + dy;
+
+      if (
+        newX >= 0 &&
+        newY >= 0 &&
+        newX < size &&
+        newY < size &&
+        canMove(maze[playerPosition.y][playerPosition.x], dx, dy)
+      ) {
+        previousPosition = { ...playerPosition };
+        playerPosition.x = newX;
+        playerPosition.y = newY;
+        updatePlayerPosition(dx, dy);
+      }
+    }
+  }
+}
+
+function updatePlayerPosition(dx, dy) {
+  const oldCell = document.querySelector(
+    `.cell[data-x="${previousPosition.x}"][data-y="${previousPosition.y}"]`
+  );
+  const newCell = document.querySelector(
+    `.cell[data-x="${playerPosition.x}"][data-y="${playerPosition.y}"]`
+  );
+
+  oldCell.classList.remove("player");
+  newCell.classList.add("player");
+
+  let oldSpan = oldCell.querySelector("span");
+  let newSpan = newCell.querySelector("span");
+
+  if (!oldSpan) {
+    oldSpan = document.createElement("span");
+    oldCell.appendChild(oldSpan);
+  }
+  if (!newSpan) {
+    newSpan = document.createElement("span");
+    newCell.appendChild(newSpan);
+  }
+
+  // Oyuncu geri giderse class güncelleme
+  if (
+    previousPositions.length > 0 &&
+    previousPositions[previousPositions.length - 1].x === playerPosition.x &&
+    previousPositions[previousPositions.length - 1].y === playerPosition.y
+  ) {
+    previousPositions.pop();
+    if (oldSpan) {
+      oldSpan.className = "";
+    }
+
+    if (dx === 1) {
+      newSpan.classList.remove("to-left");
+    } else if (dx === -1) {
+      newSpan.classList.remove("to-right");
+    } else if (dy === 1) {
+      newSpan.classList.remove("to-top");
+    } else if (dy === -1) {
+      newSpan.classList.remove("to-bottom");
+    }
+  } else {
+    if (dx === 1) {
+      oldSpan.classList.add("to-right");
+      newSpan.classList.add("right-hand");
+    } else if (dx === -1) {
+      oldSpan.classList.add("to-left");
+      newSpan.classList.add("left-hand");
+    } else if (dy === 1) {
+      oldSpan.classList.add("to-bottom");
+      newSpan.classList.add("bottom-hand");
+    } else if (dy === -1) {
+      oldSpan.classList.add("to-top");
+      newSpan.classList.add("top-hand");
+    }
+    previousPositions.push({ ...previousPosition });
+  }
+}
