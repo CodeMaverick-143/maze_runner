@@ -27,12 +27,13 @@ Check out the live version here: [Maze Runner](https://maze-runner-eight.vercel.
 - **CSS3** (with modern gradients, box shadows, and responsive design techniques)
 - **JavaScript**
 
-🧩 Usage
+## 🧩 Usage
 Open the application.
 Use the controls to define the maze size and start the game.
 Navigate through the maze to reach the end point.
 Enjoy the animations and solution path visualization!
-🌟 Contributing
+
+## 🌟 Contributing
 Contributions are welcome! If you'd like to improve this project:
 Star the repository.
 Fork the repository.
@@ -48,7 +49,7 @@ Edit
 git commit -m "Add a feature or fix"
 Push to your forked repository and open a pull request.
 
-📜 License
+## 📜 License
 This project is licensed under the MIT License.
 
 Enjoy solving mazes with Maze Runner! If you have any suggestions or encounter issues, feel free to open an issue or reach out. 😊
