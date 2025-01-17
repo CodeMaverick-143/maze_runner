@@ -2,6 +2,8 @@ let mazeContainer = document.getElementById("maze-container");
 let sizeInput = document.getElementById("size");
 let generateButton = document.getElementById("generate");
 let solveButton = document.getElementById("solve");
+let winningModal = document.getElementById("win-modal");
+let restartBtn = document.getElementById("restart-btn");
 
 let size = parseInt(sizeInput.value);
 let maze = generateMaze(size);
@@ -27,6 +29,16 @@ solveButton.addEventListener("click", () => {
   PlayerCanMove = false;
   const solution = solveMaze(maze, size);
   animateSolution(solution);
+});
+
+restartBtn.addEventListener("click", () => {
+  // Reset player position and allow movement again
+  playerPosition = { x: 0, y: 0 };
+  visited = {};
+  PlayerCanMove = true;
+
+  winningModal.style.display = "none";
+  renderMaze(maze)
 });
 
 document.addEventListener("keydown", movePlayer);
@@ -135,7 +147,7 @@ function solveMaze(maze, size) {
     { x: 1, y: 0 },
     { x: -1, y: 0 },
     { x: 0, y: 1 },
-    { x: 0, y: -1 }
+    { x: 0, y: -1 },
   ];
   const start = { x: 0, y: 0 };
   const end = { x: size - 1, y: size - 1 };
@@ -200,7 +212,7 @@ function movePlayer(event) {
     ArrowUp: { dx: 0, dy: -1 },
     ArrowDown: { dx: 0, dy: 1 },
     ArrowLeft: { dx: -1, dy: 0 },
-    ArrowRight: { dx: 1, dy: 0 }
+    ArrowRight: { dx: 1, dy: 0 },
   };
 
   if (PlayerCanMove) {
@@ -222,6 +234,12 @@ function movePlayer(event) {
         updatePlayerPosition(dx, dy);
       }
     }
+  }
+
+  // Checking if player reaches endpoint/target, show up win modal
+  if (playerPosition.x === size - 1 && playerPosition.y === size - 1) {
+    PlayerCanMove = false;
+    winningModal.style.display = "block";
   }
 }
 
