@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maze Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center">
+    <h1 class="text-3xl font-bold mb-4">Maze Game Challenge</h1>
+
+    <div class="flex justify-between items-center w-full max-w-4xl mb-4">
+        <div>Time: <span id="timer" class="font-bold">0</span> s</div>
+        <div>Moves: <span id="moves" class="font-bold">0</span></div>
+        <div>Level: <span id="level" class="font-bold">1</span></div>
+    </div>
+
+    <div id="maze" class="relative bg-gray-800 border border-gray-700 mb-4" style="width: 600px; height: 600px;">
+        <div id="player" class="absolute bg-blue-500 rounded-full" style="width: 20px; height: 20px;"></div>
+        <div id="end" class="absolute bg-green-500 rounded-full"></div>
+    </div>
+
+    <div class="flex space-x-4">
+        <button id="resetBtn" class="px-4 py-2 bg-blue-500 rounded hover:bg-blue-700">Reset</button>
+        <button id="newGameBtn" class="px-4 py-2 bg-green-500 rounded hover:bg-green-700">New Game</button>
+    </div>
+
+    <footer class="mt-6 text-gray-500">
+        Made by <span class="font-bold text-blue-400">CodeMaverick-143</span>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
